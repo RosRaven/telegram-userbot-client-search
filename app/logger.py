@@ -3,6 +3,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+
 # папка для логов
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
@@ -11,7 +13,7 @@ LOG_FILE = LOG_DIR / "app.log"
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(arctime)s | %(levelname)s | %(name)s | %(message)s",
+    format=LOG_FORMAT,
 )
 
 file_handler = RotatingFileHandler(
@@ -22,9 +24,7 @@ file_handler = RotatingFileHandler(
 )
 
 file_handler.setFormatter(
-    logging.Formatter(
-        "%(arctime)s | %(levelname)s | %(name)s | %(message)s"
-    )
+    logging.Formatter(LOG_FORMAT)
 )
 
 logger = logging.getLogger("userbot")
