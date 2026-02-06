@@ -15,10 +15,13 @@ if __name__ == "__main__":
         config = load_config()
 
         logger.info("Starting userbot")
-        logger.info(
-            f"Config loaded: chats={len(config['CHAT_IDS'])}, "
-            f"keywords={len(config['KEYWORDS'])}"
-        )
+        logger.info(f"Active chats ({len(config['CHAT_IDS'])}):")
+        for chat_id in config["CHAT_IDS"]:
+            logger.info(f" - {chat_id}")
+
+        logger.info(f"Active keywords ({len(config['KEYWORDS'])}):")
+        for keyword in config["KEYWORDS"]:
+            logger.info(f" - {keyword}")
 
         # # One-time launch
         # app.run()
