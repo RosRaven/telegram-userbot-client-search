@@ -2,6 +2,7 @@ from app.client import app
 from app.logger import logger
 from app.reader import read_last_message
 
+LIMIT_READ_CHATS = 10
 CHAT_ID = "@AntalyaB"
 
 if __name__ == "__main__":
@@ -13,7 +14,7 @@ if __name__ == "__main__":
 
         # Reading a specific chat
         with app:
-            read_last_message(app, CHAT_ID, limit=5)
+            read_last_message(app, CHAT_ID, limit=LIMIT_READ_CHATS)
 
         # # Reading all dialogues
         # with app:
