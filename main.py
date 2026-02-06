@@ -5,23 +5,24 @@ from app.config import ConfigError, load_config
 from app.logger import logger
 from app.reader import read_last_message
 
-CHAT_IDS = os.getenv("CHAT_IDS", "").split(",")
-KEYWORDS = os.getenv("KEYWORDS", "").split(",")
-
 LIMIT_READ_CHATS = 200
 
 if __name__ == "__main__":
     try:
-        config = load_config()
-
         logger.info("Starting userbot")
-        logger.info(f"Active chats ({len(config['CHAT_IDS'])}):")
+
+        config = load_config()
+        logger.info("Configuration loaded successfully")
+
+        logger.info(f"Chats to monitor: {len(config['CHAT_IDS'])}")
         for chat_id in config["CHAT_IDS"]:
             logger.info(f" - {chat_id}")
 
-        logger.info(f"Active keywords ({len(config['KEYWORDS'])}):")
+        logger.info(f"Search keywords: {len(config['KEYWORDS'])}")
         for keyword in config["KEYWORDS"]:
             logger.info(f" - {keyword}")
+
+        logger.info(f"History read limit per chat: {LIMIT_READ_CHATS}")
 
         # # One-time launch
         # app.run()
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         #         )
 
     except ConfigError as e:
-        logger.info(f"Configuration error: {e}")
+        logger.error(f"Configuration error: {e}")
 
     except Exception:
         logger.exception("Fatal error during userbot execution")
