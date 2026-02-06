@@ -10,7 +10,7 @@ load_dotenv()
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 
-logger.info("Initilizing Telegram client")
+logger.info("Initializing Telegram client")
 
 app = Client(
     name="userbot",

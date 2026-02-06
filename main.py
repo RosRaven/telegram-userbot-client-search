@@ -3,7 +3,15 @@ from app.logger import logger
 from app.reader import read_last_message
 
 LIMIT_READ_CHATS = 200
-CHAT_ID = "@AntalyaB"
+
+# CHAT_ID = "@AntalyaB"
+CHAT_IDS = [
+    "@AntalyaB",
+    "@barakholka_antalya",
+    "@baraholka_antalya_avito",
+    "@antalya6",
+    "@baraxlanet_antalya",
+]
 
 KEYWORDS = [
     "велосипед",
@@ -12,6 +20,9 @@ KEYWORDS = [
     "bicycle",
     "mtb",
     "road bike",
+    "salcano",
+    "shimano",
+
 ]
 
 if __name__ == "__main__":
@@ -23,12 +34,15 @@ if __name__ == "__main__":
 
         # Reading a specific chat
         with app:
-            read_last_message(
-                app,
-                CHAT_ID,
-                keywords=KEYWORDS,
-                limit=LIMIT_READ_CHATS
-            )
+            for chat_id in CHAT_IDS:
+                logger.info(f"Processing chat: {chat_id}")
+
+                read_last_message(
+                    app,
+                    chat_id,
+                    keywords=KEYWORDS,
+                    limit=LIMIT_READ_CHATS
+                )
 
         # # Reading all dialogues
         # with app:
