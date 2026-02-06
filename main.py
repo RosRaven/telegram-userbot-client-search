@@ -2,8 +2,17 @@ from app.client import app
 from app.logger import logger
 from app.reader import read_last_message
 
-LIMIT_READ_CHATS = 10
+LIMIT_READ_CHATS = 200
 CHAT_ID = "@AntalyaB"
+
+KEYWORDS = [
+    "велосипед",
+    "велик",
+    "bike",
+    "bicycle",
+    "mtb",
+    "road bike",
+]
 
 if __name__ == "__main__":
     try:
@@ -14,7 +23,12 @@ if __name__ == "__main__":
 
         # Reading a specific chat
         with app:
-            read_last_message(app, CHAT_ID, limit=LIMIT_READ_CHATS)
+            read_last_message(
+                app,
+                CHAT_ID,
+                keywords=KEYWORDS,
+                limit=LIMIT_READ_CHATS
+            )
 
         # # Reading all dialogues
         # with app:
