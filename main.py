@@ -1,29 +1,13 @@
+import os
+
 from app.client import app
 from app.logger import logger
 from app.reader import read_last_message
 
+CHAT_IDS = os.getenv("CHAT_IDS", "").split(",")
+KEYWORDS = os.getenv("KEYWORDS", "").split(",")
+
 LIMIT_READ_CHATS = 200
-
-# CHAT_ID = "@AntalyaB"
-CHAT_IDS = [
-    "@AntalyaB",
-    "@barakholka_antalya",
-    "@baraholka_antalya_avito",
-    "@antalya6",
-    "@baraxlanet_antalya",
-]
-
-KEYWORDS = [
-    "велосипед",
-    "велик",
-    "bike",
-    "bicycle",
-    "mtb",
-    "road bike",
-    "salcano",
-    "shimano",
-
-]
 
 if __name__ == "__main__":
     try:

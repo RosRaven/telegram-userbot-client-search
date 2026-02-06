@@ -2,7 +2,7 @@ from pyrogram import Client
 
 from app.logger import logger
 
-MAX_MESSAGE_TEXT_KENGTH = 600
+MAX_MESSAGE_TEXT_LENGTH = 600
 
 def read_last_message(
         app: Client,
@@ -27,5 +27,5 @@ def read_last_message(
             f"id={message.id} "
             f"date={message.date} "
             f"{message.from_user.id if message.from_user else 'unknown'}: "
-            f"{content[:MAX_MESSAGE_TEXT_KENGTH]}"
+            f"{content[:MAX_MESSAGE_TEXT_LENGTH]}"
         )
