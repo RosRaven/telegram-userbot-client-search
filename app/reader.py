@@ -5,6 +5,33 @@ from app.storage import save_match
 
 MAX_MESSAGE_TEXT_LENGTH = 100
 
+DEMAND_KEYWORDS = [
+    "ищу",
+    "нужен",
+    "нужна",
+    "нужно",
+    "подскажите",
+    "посоветуйте",
+    "кто может",
+    "есть ли",
+]
+
+OFFER_KEYWORDS = [
+    "провожу",
+    "провожу занятия",
+    "предлагаю",
+    "набираю",
+    "обучаю",
+    "обучение",
+    "курсы",
+    "школа",
+    "онлайн школа",
+    "опыт работы",
+    "стаж",
+]
+
+
+
 def read_last_message(
         app: Client,
         chat_id: str,
@@ -20,8 +47,20 @@ def read_last_message(
 
         text_lower = content.lower()
 
-        if not any(keyword in text_lower for keyword in keywords):
+        has_subject = any(keyword in text_lower for keyword in keywords)
+        has_demand = any(word in text_lower for word in DEMAND_KEYWORDS)
+        has_offer = any(word in text_lower for word in OFFER_KEYWORDS)
+
+        if not has_subject:
             continue
+
+        if not has_demand:
+            continue
+
+        if has_offer:
+            continue
+
+
 
         link = get_message_link(message)
 
