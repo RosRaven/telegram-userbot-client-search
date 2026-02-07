@@ -22,10 +22,25 @@ def read_last_message(
         if not any(keyword in text_lower for keyword in keywords):
             continue
 
+        link = get_message_link(message)
+
         logger.info(
             f"[MATCH][{message.chat.title}] "
             f"id={message.id} "
             f"date={message.date} "
-            f"{message.from_user.id if message.from_user else 'unknown'}: "
+            f"{message.from_user.id if message.from_user else 'unknown'}: \n"
+            f"link={link}\n"
             f"{content[:MAX_MESSAGE_TEXT_LENGTH]}"
         )
+
+def get_message_link(message) -> str | None:
+    chat = message.chat
+
+    if chat.username:
+        return f"http://t.me/{chat.username}/{message.id}"
+
+    if chat.id:
+        internal_id = str(chat.id).replace("-100", "")
+        return f"http://t.me/{internal_id}/{message.id}"
+
+    return None
