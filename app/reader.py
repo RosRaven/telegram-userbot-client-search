@@ -1,8 +1,9 @@
 from pyrogram import Client
 
 from app.logger import logger
+from app.storage import save_match
 
-MAX_MESSAGE_TEXT_LENGTH = 600
+MAX_MESSAGE_TEXT_LENGTH = 100
 
 def read_last_message(
         app: Client,
@@ -32,6 +33,19 @@ def read_last_message(
             f"link={link}\n"
             f"{content[:MAX_MESSAGE_TEXT_LENGTH]}"
         )
+
+        match_data = {
+            "chat": message.chat.username or message.chat.title,
+            "chat_id": message.chat.id,
+            "message_id": message.id,
+            "date": message.date.isoformat() if message.date else None,
+            "user_id": message.from_user.id if message.from_user else None,
+            "username": message.from_user.username if message.from_user else None,
+            "link": link,
+            "text": content[:MAX_MESSAGE_TEXT_LENGTH]
+        }
+
+        save_match(match_data)
 
 def get_message_link(message) -> str | None:
     chat = message.chat
