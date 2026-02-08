@@ -1,11 +1,13 @@
 import os
+import time
 
 from app.client import app
 from app.config import ConfigError, load_config
 from app.logger import logger
 from app.reader import read_last_message
 
-LIMIT_READ_CHATS = 200
+LIMIT_READ_CHATS = 500
+CHAT_PAUSE_SECONDS = 1
 
 if __name__ == "__main__":
     try:
@@ -38,6 +40,8 @@ if __name__ == "__main__":
                     keywords=config["KEYWORDS"],
                     limit=LIMIT_READ_CHATS,
                 )
+
+                time.sleep(CHAT_PAUSE_SECONDS)
 
         # # Reading all dialogues
         # with app:
