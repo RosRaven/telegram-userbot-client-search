@@ -5,6 +5,7 @@ from app.client import app
 from app.config import ConfigError, load_config
 from app.logger import logger
 from app.reader import read_last_message
+from app.state import load_seen, save_seen
 
 LIMIT_READ_CHATS = 500
 CHAT_PAUSE_SECONDS = 1
@@ -15,6 +16,8 @@ if __name__ == "__main__":
 
         config = load_config()
         logger.info("Configuration loaded successfully")
+
+        seen_messages = load_seen()
 
         logger.info(f"Chats to monitor: {len(config['CHAT_IDS'])}")
         for chat_id in config["CHAT_IDS"]:
@@ -34,14 +37,19 @@ if __name__ == "__main__":
             for chat_id in config["CHAT_IDS"]:
                 logger.info(f"Processing chat: {chat_id}")
 
+                chat_seen = seen_messages.setdefault(str(chat_id), set())
+
                 read_last_message(
                     app,
                     chat_id,
                     keywords=config["KEYWORDS"],
+                    seen_ids=chat_seen,
                     limit=LIMIT_READ_CHATS,
                 )
 
                 time.sleep(CHAT_PAUSE_SECONDS)
+
+            save_seen(seen_messages)
 
         # # Reading all dialogues
         # with app:

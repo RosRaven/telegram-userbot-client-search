@@ -36,11 +36,16 @@ def read_last_message(
         app: Client,
         chat_id: str,
         keywords: list[str],
-        limit: int = 5
+        seen_ids: set[int],
+        limit: int = 5,
 ) -> None:
     logger.info(f"Reading last {limit} messages from chat: {chat_id}")
 
     for message in app.get_chat_history(chat_id, limit=limit):
+
+        if message.id in seen_ids:
+            continue
+
         content = message.text or message.caption
         if not content:
             continue
@@ -59,8 +64,6 @@ def read_last_message(
 
         if has_offer:
             continue
-
-
 
         link = get_message_link(message)
 
@@ -85,6 +88,8 @@ def read_last_message(
         }
 
         save_match(match_data)
+
+        seen_ids.add(message.id)
 
 def get_message_link(message) -> str | None:
     chat = message.chat
