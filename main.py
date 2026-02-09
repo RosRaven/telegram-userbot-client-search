@@ -3,6 +3,7 @@ import time
 
 from app.client import app
 from app.config import ConfigError, load_config
+from app.chat_registry import load_chat_registry
 from app.logger import logger
 from app.reader import read_last_message
 from app.state import load_seen, save_seen
@@ -19,9 +20,9 @@ if __name__ == "__main__":
 
         seen_messages = load_seen()
 
-        logger.info(f"Chats to monitor: {len(config['CHAT_IDS'])}")
-        for chat_id in config["CHAT_IDS"]:
-            logger.info(f" - {chat_id}")
+        # logger.info(f"Chats to monitor: {len(config['CHAT_IDS'])}")
+        # for chat_id in config["CHAT_IDS"]:
+        #     logger.info(f" - {chat_id}")
 
         logger.info(f"Search keywords: {len(config['KEYWORDS'])}")
         for keyword in config["KEYWORDS"]:
@@ -29,12 +30,17 @@ if __name__ == "__main__":
 
         logger.info(f"History read limit per chat: {LIMIT_READ_CHATS}")
 
+        chat_registry = load_chat_registry()
+        for category, chats in chat_registry.items():
+            logger.info(f"{category}: {len(chats)} chats")
+
         # # One-time launch
         # app.run()
 
         # Reading a specific chat
         with app:
-            for chat_id in config["CHAT_IDS"]:
+            # for chat_id in config["CHAT_IDS"]:
+            for chat_id in chat_registry["READ"]:
                 logger.info(f"Processing chat: {chat_id}")
 
                 chat_seen = seen_messages.setdefault(str(chat_id), set())
