@@ -113,7 +113,8 @@ def analyze_chat(
 
     logger.info(f"Cheking chat. Reading last {limit} messages from chat: {chat_id}")
 
-    total_messages = 0
+    total_messages_all = 0
+    total_messages_text = 0
     keyword_hits = {key: 0 for key in keywords}
     count_match = 0
     unique_authors = set()
@@ -126,10 +127,11 @@ def analyze_chat(
             newest_date = message.date
         oldest_date = message.date
 
+        total_messages_all += 1
         content = message.text or message.caption
         if not content:
             continue
-        total_messages += 1
+        total_messages_text += 1
 
         text_lower = content.lower()
 
@@ -145,27 +147,35 @@ def analyze_chat(
             if message.from_user:
                 unique_authors.add(message.from_user.id)
 
-    density = count_match / total_messages if total_messages else 0
-    density_percent = round(density * 100, 6)
+    density_all = count_match / total_messages_all if total_messages_all else 0
+    density_percent_all = round(density_all * 100, 6)
+
+
+    density_text = count_match / total_messages_text if total_messages_text else 0
+    density_percent_text = round(density_text * 100, 6)
 
     logger.info(
         f"[MATCH][{chat_id}]\n"
         f"newest_date: {newest_date}\n"
         f"oldest_date: {oldest_date}\n"
-        f"total_messages: {total_messages}\n"
+        f"total_messages_all: {total_messages_all}\n"
+        f"total_messages_text: {total_messages_text}\n"
         f"count_match: {count_match}\n"
         f"unique_authors: {len(unique_authors)}\n"
         f"keyword_hits: {keyword_hits}\n"
-        f"density_percent: {density_percent}%"
+        f"density_percent_all: {density_percent_all}%\n"
+        f"density_percent_text: {density_percent_text}%"
     )
 
     return {
         "chat_id": chat_id,
         "newest_date": newest_date,
         "oldest_date": oldest_date,
-        "total_messages": total_messages,
+        "total_messages_all": total_messages_all,
+        "total_messages_text": total_messages_text,
         "count_match": count_match,
         "unique_authors": len(unique_authors),
         "keyword_hits": keyword_hits,
-        "density_percent": f"{density_percent}%"
+        "density_percent_all": f"{density_percent_all}%",
+        "density_percent_text": f"{density_percent_text}%"
     }
