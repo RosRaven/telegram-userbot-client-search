@@ -102,3 +102,70 @@ def get_message_link(message) -> str | None:
         return f"http://t.me/{internal_id}/{message.id}"
 
     return None
+
+
+def analyze_chat(
+        app: Client,
+        chat_id: str,
+        keywords: list[str],
+        limit: int = 2000,
+) -> dict:
+
+    logger.info(f"Cheking chat. Reading last {limit} messages from chat: {chat_id}")
+
+    total_messages = 0
+    keyword_hits = {key: 0 for key in keywords}
+    count_match = 0
+    unique_authors = set()
+    newest_date = None
+    oldest_date = None
+
+    for message in app.get_chat_history(chat_id, limit=limit):
+
+        if newest_date is None:
+            newest_date = message.date
+        oldest_date = message.date
+
+        content = message.text or message.caption
+        if not content:
+            continue
+        total_messages += 1
+
+        text_lower = content.lower()
+
+        message_has_matches = False
+        for key in keywords:
+            count = text_lower.count(key)
+            if count > 0:
+                keyword_hits[key] += count
+                message_has_matches = True
+
+        if message_has_matches:
+            count_match += 1
+            if message.from_user:
+                unique_authors.add(message.from_user.id)
+
+    density = count_match / total_messages if total_messages else 0
+    density_percent = round(density * 100, 6)
+
+    logger.info(
+        f"[MATCH][{chat_id}]\n"
+        f"newest_date: {newest_date}\n"
+        f"oldest_date: {oldest_date}\n"
+        f"total_messages: {total_messages}\n"
+        f"count_match: {count_match}\n"
+        f"unique_authors: {len(unique_authors)}\n"
+        f"keyword_hits: {keyword_hits}\n"
+        f"density_percent: {density_percent}%"
+    )
+
+    return {
+        "chat_id": chat_id,
+        "newest_date": newest_date,
+        "oldest_date": oldest_date,
+        "total_messages": total_messages,
+        "count_match": count_match,
+        "unique_authors": len(unique_authors),
+        "keyword_hits": keyword_hits,
+        "density_percent": f"{density_percent}%"
+    }

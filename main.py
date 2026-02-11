@@ -5,10 +5,10 @@ from app.client import app
 from app.config import ConfigError, load_config
 from app.chat_registry import load_chat_registry
 from app.logger import logger
-from app.reader import read_last_message
+from app.reader import read_last_message, analyze_chat
 from app.state import load_seen, save_seen
 
-LIMIT_READ_CHATS = 500
+LIMIT_READ_CHATS = 2000
 CHAT_PAUSE_SECONDS = 1
 
 if __name__ == "__main__":
@@ -37,25 +37,24 @@ if __name__ == "__main__":
         # # One-time launch
         # app.run()
 
-        # Reading a specific chat
-        with app:
-            # for chat_id in config["CHAT_IDS"]:
-            for chat_id in chat_registry["READ"]:
-                logger.info(f"Processing chat: {chat_id}")
-
-                chat_seen = seen_messages.setdefault(str(chat_id), set())
-
-                read_last_message(
-                    app,
-                    chat_id,
-                    keywords=config["KEYWORDS"],
-                    seen_ids=chat_seen,
-                    limit=LIMIT_READ_CHATS,
-                )
-
-                time.sleep(CHAT_PAUSE_SECONDS)
-
-            save_seen(seen_messages)
+        # # Only read chats from category READ
+        # with app:
+        #     for chat_id in chat_registry["READ"]:
+        #         logger.info(f"Processing chat: {chat_id}")
+        #
+        #         chat_seen = seen_messages.setdefault(str(chat_id), set())
+        #
+        #         read_last_message(
+        #             app,
+        #             chat_id,
+        #             keywords=config["KEYWORDS"],
+        #             seen_ids=chat_seen,
+        #             limit=LIMIT_READ_CHATS,
+        #         )
+        #
+        #         time.sleep(CHAT_PAUSE_SECONDS)
+        #
+        #     save_seen(seen_messages)
 
         # # Reading all dialogues
         # with app:
@@ -63,6 +62,16 @@ if __name__ == "__main__":
         #         logger.info(
         #             f"Chat title: {dialog.chat.title} | ID: {dialog.chat.id}"
         #         )
+
+        # I read all unsorted chats "REVIEW"
+        with app:
+            for chat_id in chat_registry["REVIEW"]:
+                logger.info(f"Analis chat: {chat_id}")
+
+                data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], LIMIT_READ_CHATS)
+                logger.info(data_analyze)
+
+
 
     except ConfigError as e:
         logger.error(f"Configuration error: {e}")
