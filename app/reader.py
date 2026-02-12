@@ -88,7 +88,6 @@ def read_last_message(
         }
 
         save_match(match_data)
-
         seen_ids.add(message.id)
 
 def get_message_link(message) -> str | None:
@@ -107,9 +106,14 @@ def get_message_link(message) -> str | None:
 def analyze_chat(
         app: Client,
         chat_id: str,
-        keywords: list[str],
-        limit: int = 2000,
+        config: dict,
 ) -> dict:
+
+    keywords = config["KEYWORDS"]
+    limit = config["LIMIT_READ_CHATS"]
+    MIN_DENSITY = config["MIN_DENSITY"]
+    MIN_MATCH_MESSAGES = config["MIN_MATCH_MESSAGES"]
+    MIN_UNIQUE_AUTHORS = config["MIN_UNIQUE_AUTHORS"]
 
     logger.info(f"Cheking chat. Reading last {limit} messages from chat: {chat_id}")
 
@@ -117,7 +121,7 @@ def analyze_chat(
     total_messages_text = 0
     keyword_hits = {key: 0 for key in keywords}
     count_match = 0
-    unique_authors = set()
+    set_unique_authors = set()
     newest_date = None
     oldest_date = None
 
@@ -145,14 +149,24 @@ def analyze_chat(
         if message_has_matches:
             count_match += 1
             if message.from_user:
-                unique_authors.add(message.from_user.id)
+                set_unique_authors.add(message.from_user.id)
 
+    unique_authors = len(set_unique_authors)
     density_all = count_match / total_messages_all if total_messages_all else 0
     density_percent_all = round(density_all * 100, 6)
 
 
     density_text = count_match / total_messages_text if total_messages_text else 0
     density_percent_text = round(density_text * 100, 6)
+
+    days_span = (newest_date - oldest_date).days
+    message_per_day = total_messages_all / days_span
+
+    is_good_chat = (
+        density_text >= MIN_DENSITY
+        and count_match >= MIN_MATCH_MESSAGES
+        and unique_authors >= MIN_UNIQUE_AUTHORS
+    )
 
     logger.info(
         f"[MATCH][{chat_id}]\n"
@@ -161,10 +175,13 @@ def analyze_chat(
         f"total_messages_all: {total_messages_all}\n"
         f"total_messages_text: {total_messages_text}\n"
         f"count_match: {count_match}\n"
-        f"unique_authors: {len(unique_authors)}\n"
+        f"unique_authors: {unique_authors}\n"
         f"keyword_hits: {keyword_hits}\n"
         f"density_percent_all: {density_percent_all}%\n"
-        f"density_percent_text: {density_percent_text}%"
+        f"density_percent_text: {density_percent_text}%\n"
+        f"days_span: {days_span}\n"
+        f"message_per_day: {message_per_day}\n"
+        f"is_good_chat: {is_good_chat}\n"
     )
 
     return {
@@ -174,8 +191,11 @@ def analyze_chat(
         "total_messages_all": total_messages_all,
         "total_messages_text": total_messages_text,
         "count_match": count_match,
-        "unique_authors": len(unique_authors),
+        "unique_authors": unique_authors,
         "keyword_hits": keyword_hits,
         "density_percent_all": f"{density_percent_all}%",
-        "density_percent_text": f"{density_percent_text}%"
+        "density_percent_text": f"{density_percent_text}%",
+        "days_span": days_span,
+        "message_per_day": message_per_day,
+        "is_good_chat": is_good_chat
     }
