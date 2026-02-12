@@ -8,8 +8,8 @@ from app.logger import logger
 from app.reader import read_last_message, analyze_chat
 from app.state import load_seen, save_seen
 
-LIMIT_READ_CHATS = 2000
-CHAT_PAUSE_SECONDS = 1
+# LIMIT_READ_CHATS = 2000
+# CHAT_PAUSE_SECONDS = 1
 
 if __name__ == "__main__":
     try:
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         for keyword in config["KEYWORDS"]:
             logger.info(f" - {keyword}")
 
-        logger.info(f"History read limit per chat: {LIMIT_READ_CHATS}")
+        logger.info(f"History read limit per chat: {config["LIMIT_READ_CHATS"]}")
 
         chat_registry = load_chat_registry()
         for category, chats in chat_registry.items():
@@ -49,10 +49,10 @@ if __name__ == "__main__":
         #             chat_id,
         #             keywords=config["KEYWORDS"],
         #             seen_ids=chat_seen,
-        #             limit=LIMIT_READ_CHATS,
+        #             limit=config["LIMIT_READ_CHATS"],
         #         )
         #
-        #         time.sleep(CHAT_PAUSE_SECONDS)
+        #         time.sleep(config["CHAT_PAUSE_SECONDS"])
         #
         #     save_seen(seen_messages)
 
@@ -68,9 +68,10 @@ if __name__ == "__main__":
             for chat_id in chat_registry["REVIEW"]:
                 logger.info(f"Analis chat: {chat_id}")
 
-                data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], LIMIT_READ_CHATS)
+                # data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], config["LIMIT_READ_CHATS"])
+                data_analyze = analyze_chat(app, chat_id, config)
                 logger.info(data_analyze)
-
+                time.sleep(config["CHAT_PAUSE_SECONDS"])
 
 
     except ConfigError as e:
