@@ -159,8 +159,22 @@ def analyze_chat(
     density_text = count_match / total_messages_text if total_messages_text else 0
     density_percent_text = round(density_text * 100, 6)
 
-    days_span = (newest_date - oldest_date).days
-    message_per_day = total_messages_all / days_span
+    days_span = (newest_date - oldest_date).days if newest_date and oldest_date else 0
+    message_per_day = total_messages_all / days_span if days_span > 0 else total_messages_all
+
+    score = 0
+    if density_text >= MIN_DENSITY:
+        score += 3
+    if density_all >= MIN_DENSITY:
+        score += 1
+    if count_match >= MIN_MATCH_MESSAGES:
+        score += 2
+    if unique_authors >= MIN_UNIQUE_AUTHORS:
+        score += 2
+    if days_span <= 90:
+        score += 1
+    if message_per_day >= 50:
+        score += 1
 
     is_good_chat = (
         density_text >= MIN_DENSITY
@@ -182,6 +196,7 @@ def analyze_chat(
         f"days_span: {days_span}\n"
         f"message_per_day: {message_per_day}\n"
         f"is_good_chat: {is_good_chat}\n"
+        f"Chat score: {score}/10\n"
     )
 
     return {
@@ -197,5 +212,6 @@ def analyze_chat(
         "density_percent_text": f"{density_percent_text}%",
         "days_span": days_span,
         "message_per_day": message_per_day,
-        "is_good_chat": is_good_chat
+        "is_good_chat": is_good_chat,
+        "score": score
     }
