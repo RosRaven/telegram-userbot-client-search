@@ -111,9 +111,6 @@ def analyze_chat(
 
     keywords = config["KEYWORDS"]
     limit = config["LIMIT_READ_CHATS"]
-    MIN_DENSITY = config["MIN_DENSITY"]
-    MIN_MATCH_MESSAGES = config["MIN_MATCH_MESSAGES"]
-    MIN_UNIQUE_AUTHORS = config["MIN_UNIQUE_AUTHORS"]
 
     logger.info(f"Cheking chat. Reading last {limit} messages from chat: {chat_id}")
 
@@ -152,6 +149,8 @@ def analyze_chat(
                 set_unique_authors.add(message.from_user.id)
 
     unique_authors = len(set_unique_authors)
+    author_diversity_ratio = unique_authors / count_match
+
     density_all = count_match / total_messages_all if total_messages_all else 0
     density_percent_all = round(density_all * 100, 6)
 
@@ -162,44 +161,7 @@ def analyze_chat(
     days_span = (newest_date - oldest_date).days if newest_date and oldest_date else 0
     message_per_day = total_messages_all / days_span if days_span > 0 else total_messages_all
 
-    score = 0
-    if density_text >= MIN_DENSITY:
-        score += 3
-    if density_all >= MIN_DENSITY:
-        score += 1
-    if count_match >= MIN_MATCH_MESSAGES:
-        score += 2
-    if unique_authors >= MIN_UNIQUE_AUTHORS:
-        score += 2
-    if days_span <= 90:
-        score += 1
-    if message_per_day >= 50:
-        score += 1
-
-    is_good_chat = (
-        density_text >= MIN_DENSITY
-        and count_match >= MIN_MATCH_MESSAGES
-        and unique_authors >= MIN_UNIQUE_AUTHORS
-    )
-
-    logger.info(
-        f"[MATCH][{chat_id}]\n"
-        f"newest_date: {newest_date}\n"
-        f"oldest_date: {oldest_date}\n"
-        f"total_messages_all: {total_messages_all}\n"
-        f"total_messages_text: {total_messages_text}\n"
-        f"count_match: {count_match}\n"
-        f"unique_authors: {unique_authors}\n"
-        f"keyword_hits: {keyword_hits}\n"
-        f"density_percent_all: {density_percent_all}%\n"
-        f"density_percent_text: {density_percent_text}%\n"
-        f"days_span: {days_span}\n"
-        f"message_per_day: {message_per_day}\n"
-        f"is_good_chat: {is_good_chat}\n"
-        f"Chat score: {score}/10\n"
-    )
-
-    return {
+    metrix = {
         "chat_id": chat_id,
         "newest_date": newest_date,
         "oldest_date": oldest_date,
@@ -208,10 +170,85 @@ def analyze_chat(
         "count_match": count_match,
         "unique_authors": unique_authors,
         "keyword_hits": keyword_hits,
-        "density_percent_all": f"{density_percent_all}%",
-        "density_percent_text": f"{density_percent_text}%",
+        "density_all": density_all,
+        "density_percent_all": density_percent_all,
+        "density_text": density_text,
+        "density_percent_text": density_percent_text,
         "days_span": days_span,
         "message_per_day": message_per_day,
-        "is_good_chat": is_good_chat,
-        "score": score
+        "author_diversity_ratio": author_diversity_ratio
     }
+
+    decision = decision_engine(metrix, config)
+    log_chat_analysis(chat_id, metrix, decision)
+
+    return decision
+
+def decision_engine(metrix: dict, config: dict) -> dict:
+    """
+
+    :param metrix: accept metrix drom analyze_chat
+    :param config: accept configuration settings
+    :return: return the final verdict
+
+    """
+
+    MIN_DENSITY = config["MIN_DENSITY"]
+    MIN_MATCH_MESSAGES = config["MIN_MATCH_MESSAGES"]
+    MIN_UNIQUE_AUTHORS = config["MIN_UNIQUE_AUTHORS"]
+
+    score = 0
+    if metrix["density_text"] >= MIN_DENSITY:
+        score += 2
+    if metrix["density_all"] >= MIN_DENSITY:
+        score += 1
+    if metrix["count_match"] >= MIN_MATCH_MESSAGES:
+        score += 2
+    if metrix["unique_authors"] >= MIN_UNIQUE_AUTHORS:
+        score += 2
+    if metrix["days_span"] <= 90:
+        score += 1
+    if metrix["message_per_day"] >= 50:
+        score += 1
+    if metrix["author_diversity_ratio"] > 0.1:
+        score += 1
+
+    if score >= 7:
+        verdict = "READ"
+    elif score >= 4:
+        verdict = "REVIEW"
+    else:
+        verdict = "SKIP"
+
+    decision = {
+        "score": score,
+        "verdict": verdict
+    }
+
+    return decision
+
+
+
+def log_chat_analysis(chat_id: str, metrix: dict, decision: dict) -> None:
+    logger.info(
+        f"[MATCH][{chat_id}]\n"
+        f"newest_date: {metrix['newest_date']}\n"
+        f"oldest_date: {metrix['oldest_date']}\n"
+        f"total_messages_all: {metrix['total_messages_all']}\n"
+        f"total_messages_text: {metrix['total_messages_text']}\n"
+        f"count_match: {metrix['count_match']}\n"
+        f"unique_authors: {metrix['unique_authors']}\n"
+        f"keyword_hits: {metrix['keyword_hits']}\n"
+        f"density_percent_all: {metrix['density_percent_all']}%\n"
+        f"density_percent_text: {metrix['density_percent_text']}%\n"
+        f"days_span: {metrix['days_span']}\n"
+        f"message_per_day: {metrix['message_per_day']}\n"
+        f"author_diversity_ratio: {metrix['author_diversity_ratio']}\n"
+        f"Chat score: {decision['score']}/10\n"
+        f"verdict: {decision['verdict']}"
+    )
+    logger.info(
+        f"[DECISION][{chat_id}] "
+        f"score={decision['score']} "
+        f"verfict={decision['verdict']}\n"
+    )

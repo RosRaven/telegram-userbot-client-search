@@ -65,12 +65,22 @@ if __name__ == "__main__":
 
         # I read all unsorted chats "REVIEW"
         with app:
+            MIN_DENSITY = config["MIN_DENSITY"]
+            MIN_MATCH_MESSAGES = config["MIN_MATCH_MESSAGES"]
+            MIN_UNIQUE_AUTHORS = config["MIN_UNIQUE_AUTHORS"]
+            logger.info(
+                "Start analyzing chats\n"
+                f"MIN_DENSITY = {MIN_DENSITY}\n"
+                f"MIN_MATCH_MESSAGES = {MIN_MATCH_MESSAGES}\n"
+                f"MIN_UNIQUE_AUTHORS = {MIN_UNIQUE_AUTHORS}\n"
+            )
+
             for chat_id in chat_registry["REVIEW"]:
                 logger.info(f"Analis chat: {chat_id}")
 
                 # data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], config["LIMIT_READ_CHATS"])
-                data_analyze = analyze_chat(app, chat_id, config)
-                logger.info(data_analyze)
+                decision = analyze_chat(app, chat_id, config)
+
                 time.sleep(config["CHAT_PAUSE_SECONDS"])
 
 
