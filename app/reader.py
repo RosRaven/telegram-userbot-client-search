@@ -39,6 +39,8 @@ def read_last_message(
         seen_ids: set[int],
         limit: int = 5,
 ) -> None:
+    """Future challenge: split into decision-making and logging modules"""
+    
     logger.info(f"Reading last {limit} messages from chat: {chat_id}")
 
     for message in app.get_chat_history(chat_id, limit=limit):
@@ -112,7 +114,7 @@ def analyze_chat(
     keywords = config["KEYWORDS"]
     limit = config["LIMIT_READ_CHATS"]
 
-    logger.info(f"Cheking chat. Reading last {limit} messages from chat: {chat_id}")
+    logger.info(f"Checking chat. Reading last {limit} messages from chat: {chat_id}")
 
     total_messages_all = 0
     total_messages_text = 0
@@ -149,7 +151,7 @@ def analyze_chat(
                 set_unique_authors.add(message.from_user.id)
 
     unique_authors = len(set_unique_authors)
-    author_diversity_ratio = unique_authors / count_match
+    author_diversity_ratio = unique_authors / count_match if count_match else 0
 
     density_all = count_match / total_messages_all if total_messages_all else 0
     density_percent_all = round(density_all * 100, 6)
@@ -161,7 +163,7 @@ def analyze_chat(
     days_span = (newest_date - oldest_date).days if newest_date and oldest_date else 0
     message_per_day = total_messages_all / days_span if days_span > 0 else total_messages_all
 
-    metrix = {
+    metrics = {
         "chat_id": chat_id,
         "newest_date": newest_date,
         "oldest_date": oldest_date,
@@ -179,15 +181,15 @@ def analyze_chat(
         "author_diversity_ratio": author_diversity_ratio
     }
 
-    decision = decision_engine(metrix, config)
-    log_chat_analysis(chat_id, metrix, decision)
+    decision = decision_engine(metrics, config)
+    log_chat_analysis(chat_id, metrics, decision)
 
     return decision
 
-def decision_engine(metrix: dict, config: dict) -> dict:
+def decision_engine(metrics: dict, config: dict) -> dict:
     """
 
-    :param metrix: accept metrix drom analyze_chat
+    :param metrics: accept metrics from analyze_chat
     :param config: accept configuration settings
     :return: return the final verdict
 
@@ -198,19 +200,19 @@ def decision_engine(metrix: dict, config: dict) -> dict:
     MIN_UNIQUE_AUTHORS = config["MIN_UNIQUE_AUTHORS"]
 
     score = 0
-    if metrix["density_text"] >= MIN_DENSITY:
+    if metrics["density_text"] >= MIN_DENSITY:
         score += 2
-    if metrix["density_all"] >= MIN_DENSITY:
+    if metrics["density_all"] >= MIN_DENSITY:
         score += 1
-    if metrix["count_match"] >= MIN_MATCH_MESSAGES:
+    if metrics["count_match"] >= MIN_MATCH_MESSAGES:
         score += 2
-    if metrix["unique_authors"] >= MIN_UNIQUE_AUTHORS:
+    if metrics["unique_authors"] >= MIN_UNIQUE_AUTHORS:
         score += 2
-    if metrix["days_span"] <= 90:
+    if metrics["days_span"] <= 90:
         score += 1
-    if metrix["message_per_day"] >= 50:
+    if metrics["message_per_day"] >= 50:
         score += 1
-    if metrix["author_diversity_ratio"] > 0.1:
+    if metrics["author_diversity_ratio"] > 0.1:
         score += 1
 
     if score >= 7:
@@ -229,26 +231,26 @@ def decision_engine(metrix: dict, config: dict) -> dict:
 
 
 
-def log_chat_analysis(chat_id: str, metrix: dict, decision: dict) -> None:
+def log_chat_analysis(chat_id: str, metrics: dict, decision: dict) -> None:
     logger.info(
         f"[MATCH][{chat_id}]\n"
-        f"newest_date: {metrix['newest_date']}\n"
-        f"oldest_date: {metrix['oldest_date']}\n"
-        f"total_messages_all: {metrix['total_messages_all']}\n"
-        f"total_messages_text: {metrix['total_messages_text']}\n"
-        f"count_match: {metrix['count_match']}\n"
-        f"unique_authors: {metrix['unique_authors']}\n"
-        f"keyword_hits: {metrix['keyword_hits']}\n"
-        f"density_percent_all: {metrix['density_percent_all']}%\n"
-        f"density_percent_text: {metrix['density_percent_text']}%\n"
-        f"days_span: {metrix['days_span']}\n"
-        f"message_per_day: {metrix['message_per_day']}\n"
-        f"author_diversity_ratio: {metrix['author_diversity_ratio']}\n"
+        f"newest_date: {metrics['newest_date']}\n"
+        f"oldest_date: {metrics['oldest_date']}\n"
+        f"total_messages_all: {metrics['total_messages_all']}\n"
+        f"total_messages_text: {metrics['total_messages_text']}\n"
+        f"count_match: {metrics['count_match']}\n"
+        f"unique_authors: {metrics['unique_authors']}\n"
+        f"keyword_hits: {metrics['keyword_hits']}\n"
+        f"density_percent_all: {metrics['density_percent_all']}%\n"
+        f"density_percent_text: {metrics['density_percent_text']}%\n"
+        f"days_span: {metrics['days_span']}\n"
+        f"message_per_day: {metrics['message_per_day']}\n"
+        f"author_diversity_ratio: {metrics['author_diversity_ratio']}\n"
         f"Chat score: {decision['score']}/10\n"
         f"verdict: {decision['verdict']}"
     )
     logger.info(
         f"[DECISION][{chat_id}] "
         f"score={decision['score']} "
-        f"verfict={decision['verdict']}\n"
+        f"verdict={decision['verdict']}\n"
     )

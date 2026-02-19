@@ -28,7 +28,7 @@ if __name__ == "__main__":
         for keyword in config["KEYWORDS"]:
             logger.info(f" - {keyword}")
 
-        logger.info(f"History read limit per chat: {config["LIMIT_READ_CHATS"]}")
+        logger.info(f"History read limit per chat: {config['LIMIT_READ_CHATS']}")
 
         chat_registry = load_chat_registry()
         for category, chats in chat_registry.items():
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             )
 
             for chat_id in chat_registry["REVIEW"]:
-                logger.info(f"Analis chat: {chat_id}")
+                logger.info(f"Analyzing chat: {chat_id}")
 
                 # data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], config["LIMIT_READ_CHATS"])
                 decision = analyze_chat(app, chat_id, config)
