@@ -3,7 +3,7 @@ import time
 
 from app.client import app
 from app.config import ConfigError, load_config
-from app.chat_registry import load_chat_registry
+from app.chat_registry import load_chat_registry, update_chat_registry, save_chat_registry
 from app.logger import logger
 from app.reader import read_last_message, analyze_chat
 from app.state import load_seen, save_seen
@@ -75,13 +75,28 @@ if __name__ == "__main__":
                 f"MIN_UNIQUE_AUTHORS = {MIN_UNIQUE_AUTHORS}\n"
             )
 
-            for chat_id in chat_registry["REVIEW"]:
+            registry = load_chat_registry()
+            changed_any = False
+
+            for chat_id in list(registry["REVIEW"]):
                 logger.info(f"Analyzing chat: {chat_id}")
 
                 # data_analyze = analyze_chat(app, chat_id, config['KEYWORDS'], config["LIMIT_READ_CHATS"])
                 decision = analyze_chat(app, chat_id, config)
+                # Тут реализовать update_chat_registry
+                changed = update_chat_registry(chat_id, decision["verdict"], registry)
+                changed_any = changed_any or changed
 
                 time.sleep(config["CHAT_PAUSE_SECONDS"])
+
+            if changed_any:
+                logger.info(
+                    f"[MAIN] Changed chats\n"
+                    f"{registry}"
+                )
+                save_chat_registry(registry)
+
+                
 
 
     except ConfigError as e:
